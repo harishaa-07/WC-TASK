@@ -1,0 +1,122 @@
+1.
+SELECT
+    t.team_name,
+    COUNT(DISTINCT md.match_id) AS total_matches
+FROM
+    teams t
+JOIN
+    match_details md ON t.team_id IN (md.team1_id, md.team2_id)
+GROUP BY
+    t.team_name                                  
+ORDER BY
+    total_matches DESC;
+
+ team_name   | total_matches 
+--------------+---------------
+ England      |             1
+ South Africa |             1
+
+
+---------------------------------------------------
+2.
+ SELECT
+    v.venue_name,
+    SUM(md.runs_scored_by_team1 + md.runs_scored_by_team2) AS total_runs
+FROM
+    venues v
+JOIN
+    match_details md ON v.venue_id = md.venue_id
+GROUP BY
+    v.venue_name
+ORDER BY
+    total_runs DESC;
+
+ venue_name | total_runs 
+------------+------------
+ The Oval   |        518
+
+----------------------------------------------------------
+3.
+SELECT
+    TO_CHAR(md.match_date, 'Month YYYY') AS month_year,
+    SUM(md.runs_scored_by_team1 + md.runs_scored_by_team2) AS total_runs
+FROM
+    match_details md
+GROUP BY
+    month_year
+ORDER BY
+    month_year;
+
+ month_year   | total_runs 
+----------------+------------
+ May       2019 |        518
+
+----------------------------------------------------------
+4.SELECT
+    TO_CHAR(md.match_date, 'Day') AS day_of_week,
+    COUNT(DISTINCT md.match_id) AS total_matches,
+    SUM(md.runs_scored_by_team1 + md.runs_scored_by_team2) AS total_runs
+FROM
+    match_details md
+GROUP BY
+    day_of_week
+ORDER BY
+    total_runs DESC;
+ day_of_week | total_matches | total_runs 
+-------------+---------------+------------
+ Thursday    |             1 |        518
+
+----------------------------------------------------------------------------
+5. create table batting_statistics (player_id  int primary key references players(player_id) ,
+                                 team_id int references teams(team_id) ,
+                                 year varchar(255) , matches_played int ,innings_played int , runs_scored int , not_outs int , Highest_score int);
+
+
+SELECT
+    p.player_name,
+    t.team_name,
+    bs.runs_scored,
+    bs.balls_faced,
+    bs.innings_played,
+    ROUND(CAST(bs.runs_scored AS DECIMAL) / (bs.innings_played - bs.not_outs), 2) AS batting_average
+FROM
+    batting_statistics bs
+JOIN
+    players p ON bs.player_id = p.player_id
+JOIN
+    teams t ON bs.team_id = t.team_id
+WHERE
+    bs.innings_played - bs.not_outs > 0 -- Exclude innings where batsman remained not out
+ORDER BY
+    batting_average DESC ; 
+LIMIT 5;
+ player_name | team_name | total_runs | balls_faced | innings_played | batting_average 
+-------------+-----------+------------+-------------+----------------+-----------------
+ Joe Root    | England   |        556 |         321 |             11 |           61.78
+
+----------------------------------------------------------------------------
+6.
+create table bowling_statistics (player_id  int primary key references players(player_id) ,
+                                 team_id int references teams(team_id) ,
+                                 year varchar(255) , matches_played varchar(255),innings_played int , balls int , wickets_taken int , maidens int , best_figures int ,  overs decimal(3,1) );
+
+
+SELECT                                              
+    p.player_name,
+    t.team_name,
+    bs. wickets_taken,
+    bs.runs,                                                                 
+    ROUND(CAST(bs.runs AS DECIMAL) / bs. wickets_taken, 2) AS bowling_average
+FROM                     
+    bowling_statistics bs
+JOIN                                       
+    players p ON bs.player_id = p.player_id
+JOIN                                 
+    teams t ON bs.team_id = t.team_id
+ORDER BY
+    bowling_average ASC
+LIMIT 5;
+ player_name | team_name | wickets_taken | runs | bowling_average 
+-------------+-----------+---------------+------+-----------------
+ Moeen Ali   | England   |             5 |  230 |           46.00
+
